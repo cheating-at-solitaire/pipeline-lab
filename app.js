@@ -4,7 +4,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.get("/", (req, res) => {
-  res.send("Hello from my home lab pipeline!");
+  res.send("Version 2 - Automatically deployed with GitHub Actions and Argo CD!");
 });
 
 app.get("/health", (req, res) => {

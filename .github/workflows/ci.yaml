@@ -41,16 +41,16 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
-            -t ghcr.io/${{ github.repository_owner }}/pipeline-lab:${{ github.sha }} \
+            -t ghcr.io/cheating-at-solitaire/pipeline-lab:${{ github.sha }} \
             .
 
       - name: Push Docker image
         if: github.event_name == 'push'
         run: |
           docker push \
-            ghcr.io/${{ github.repository_owner }}/pipeline-lab:${{ github.sha }}
+            ghcr.io/cheating-at-solitaire/pipeline-lab:${{ github.sha }}
 
-      update-gitops:
+  update-gitops:
     name: Update GitOps image
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

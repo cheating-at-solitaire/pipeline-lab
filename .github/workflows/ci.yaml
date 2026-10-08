@@ -49,3 +49,48 @@ jobs:
         run: |
           docker push \
             ghcr.io/${{ github.repository_owner }}/pipeline-lab:${{ github.sha }}
+
+    update-gitops:
+    name: Update GitOps image
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout GitOps repository
+        uses: actions/checkout@v4
+        with:
+          repository: cheating-at-solitaire/homelab-gitops
+          token: ${{ secrets.GITOPS_TOKEN }}
+          ref: main
+          path: gitops
+
+      - name: Update deployment image
+        env:
+          IMAGE: ghcr.io/cheating-at-solitaire/pipeline-lab:${{ github.sha }}
+        run: |
+          cd gitops
+
+          sed -i \
+            "s|image: ghcr.io/cheating-at-solitaire/pipeline-lab:.*|image: ${IMAGE}|" \
+            apps/hello-app/deployment.yaml
+
+          git diff --check
+          git diff -- apps/hello-app/deployment.yaml
+
+      - name: Commit and push change
+        run: |
+          cd gitops
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add apps/hello-app/deployment.yaml
+
+          if git diff --cached --quiet; then
+            echo "No image change required"
+            exit 0
+          fi
+
+          git commit -m "Deploy pipeline-lab image ${{ github.sha }}"
+          git push origin HEAD:main
